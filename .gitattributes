@@ -1,2 +1,4 @@
 *.cpp linguist-language=c++
 *.go linguist-language=c++
+*.h linguist-language=c++
+include/*.h linguist-language=c++
