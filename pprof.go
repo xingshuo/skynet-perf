@@ -8,13 +8,13 @@ import (
 	"os"
 	"sort"
 	"strings"
-    "github.com/goccy/go-graphviz"
+	"github.com/goccy/go-graphviz"
 )
 
 const (
-	HEADER_LEN = 4
-	KRED = "\x1B[31m"
-	KNRM = "\x1B[0m"
+	DataHeaderLen = 4
+	KRED          = "\x1B[31m"
+	KNRM          = "\x1B[0m"
 )
 
 type Sample struct {
@@ -34,6 +34,7 @@ var (
 	text  bool
 	png   string
 	svg   string
+	info  string
 )
 
 func parseFile(filename string) (*Profile, error) {
@@ -42,11 +43,11 @@ func parseFile(filename string) (*Profile, error) {
 		return nil, fmt.Errorf("ReadFile fail: %w", err)
 	}
 	totalLen := len(data)
-	if totalLen < HEADER_LEN {
+	if totalLen < DataHeaderLen {
 		return nil, fmt.Errorf("header len error")
 	}
 	bodyLen := binary.BigEndian.Uint32(data)
-	if totalLen != HEADER_LEN+int(bodyLen) {
+	if totalLen != DataHeaderLen+int(bodyLen) {
 		return nil, fmt.Errorf("data len error")
 	}
 	prof := &Profile{
@@ -54,7 +55,7 @@ func parseFile(filename string) (*Profile, error) {
 		funcId2Name: make(map[uint32]string),
 		samples:     make([]*Sample, 0),
 	}
-	offset := HEADER_LEN
+	offset := DataHeaderLen
 	funcNum := binary.BigEndian.Uint32(data[offset:])
 	offset += 4
 	for i := 0; i < int(funcNum); i++ {
@@ -143,6 +144,45 @@ func showPic(prof *Profile, png, svg string) {
 	}
 }
 
+func showInfo(prof *Profile, outFile string) {
+	type pair struct {
+		Id   uint32
+		name string
+	}
+	pairs := make([]*pair, 0)
+	for Id, name := range prof.funcId2Name {
+		pairs = append(pairs, &pair{Id: Id, name: name})
+	}
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].Id < pairs[j].Id
+	})
+	var builder strings.Builder
+	builder.WriteString("FuncId\t:\tFuncName\n")
+	for _, pa := range pairs {
+		builder.WriteString(fmt.Sprintf("%d\t:\t%s\n", pa.Id, pa.name))
+	}
+	builder.WriteString("--------------------------------------------------------------------\n")
+
+	sort.Slice(prof.samples, func(i, j int) bool {
+		return prof.samples[i].count > prof.samples[j].count
+	})
+	builder.WriteString("Count\t:\tBacktrace\n")
+	for _, sa := range prof.samples {
+		builder.WriteString(fmt.Sprintf("%d\t:\t", sa.count))
+		for i := 0; i < sa.depth; i++ {
+			if i == sa.depth-1 {
+				builder.WriteString(fmt.Sprintf("%d\n", sa.stack[i]))
+			} else {
+				builder.WriteString(fmt.Sprintf("%d -> ", sa.stack[i]))
+			}
+		}
+	}
+
+	if err := ioutil.WriteFile(outFile, []byte(builder.String()), 0666); err != nil {
+		fmt.Println(err)
+	}
+}
+
 func newDot(prof *Profile) string {
 	flatNodes := make(map[uint32]int)
 	cumNodes := make(map[uint32]int)
@@ -203,37 +243,37 @@ func newDot(prof *Profile) string {
 	fixFuncName := func(name string) string {
 		return strings.Replace(name, "\"", "'", -1)
 	}
-	dot := fmt.Sprintf("digraph G {\n")
+	var dot strings.Builder
+	dot.WriteString("digraph G {\n")
 	for Id, count := range cumNodes {
-		dot += fmt.Sprintf("\tnode%v [label=\"%v\\r%v (%v%%)\\r",
-			Id, fixFuncName(prof.funcId2Name[Id]), flatNodes[Id], flatNodes[Id]*100/totalCount)
+		dot.WriteString(fmt.Sprintf("\tnode%v [label=\"%v\\r%v (%v%%)\\r",
+			Id, fixFuncName(prof.funcId2Name[Id]), flatNodes[Id], flatNodes[Id]*100/totalCount))
 		if parents[Id] {
-			dot += fmt.Sprintf("%v (%v%%)\\r", count, count*100/totalCount)
+			dot.WriteString(fmt.Sprintf("%v (%v%%)\\r", count, count*100/totalCount))
 		}
-		dot += fmt.Sprintf("\";")
+		dot.WriteString("\";")
 
 		fontsize := flatNodes[Id] * 100 / totalCount
 		if fontsize < 10 {
 			fontsize = 10
 		}
-		dot += fmt.Sprintf("fontsize=%v;", fontsize)
-		dot += fmt.Sprintf("shape=box;")
+		dot.WriteString(fmt.Sprintf("fontsize=%v;", fontsize))
+		dot.WriteString("shape=box;")
 		if ranking[Id] > 0 && ranking[Id] <= 5 {
-			dot += fmt.Sprintf("color=red;")
+			dot.WriteString("color=red;")
 		}
-		dot += fmt.Sprintf("];\n")
+		dot.WriteString("];\n")
 	}
-
 	for vec, count := range vectors {
 		linewidth := float64(count) * 8.0 / float64(totalCount)
 		if linewidth < 0.2 {
 			linewidth = 0.2
 		}
-		dot += fmt.Sprintf("\tnode%v->node%v [style=\"setlinewidth(%v)\" label=%v];\n", vec.src, vec.dst, linewidth, count)
+		dot.WriteString(fmt.Sprintf("\tnode%v->node%v [style=\"setlinewidth(%v)\" label=%v];\n", vec.src, vec.dst, linewidth, count))
 	}
-	dot += fmt.Sprintf("}\n")
+	dot.WriteString("}\n")
 
-	return dot
+	return dot.String()
 }
 
 func main() {
@@ -241,7 +281,9 @@ func main() {
 	flag.BoolVar(&text, "text", false, "show text sort data")
 	flag.StringVar(&png, "png", "", "generate png file")
 	flag.StringVar(&svg, "svg", "", "generate svg file")
+	flag.StringVar(&info, "info", "", "dump profile data detail info to file")
 	flag.Parse()
+
 	if input == "" {
 		flag.Usage()
 		os.Exit(1)
@@ -256,5 +298,8 @@ func main() {
 	}
 	if png != "" || svg != "" {
 		showPic(prof, png, svg)
+	}
+	if info != "" {
+		showInfo(prof, info)
 	}
 }
