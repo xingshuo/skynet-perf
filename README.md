@@ -36,7 +36,7 @@ skynet snlua服务性能分析工具
 ```
 输出示例：
 ```
-1th     51%	    function 'calc23'
+1th	    51%	    function 'calc23'
 2th	    30%	    function 'calc22'
 3th	    17%	    function 'calc21'
 ```
