@@ -1,2 +1,6 @@
 lperf.so
 pprof
+skynet
+*.pro
+*.png
+*.svg

@@ -2,7 +2,7 @@
 CXX = g++
 CFLAGS = -g3 -Wall -std=c++11 -DNDEBUG -O3
 SHARED = -fPIC --shared
-INCLUDE_DIR = include/
+INCLUDE_DIR ?= include/
 TARGET = lperf.so
 
 all: $(TARGET)

@@ -1,0 +1,8 @@
+thread = 4
+harbor = 0
+start = "calcsvr"
+lualoader = "./skynet/lualib/loader.lua"
+luaservice = "./test/?.lua;" .. "./skynet/service/?.lua;" .. "./skynet/service/?/main.lua;"
+lua_path = "./skynet/lualib/compat10/?.lua;" .. "./skynet/lualib/?.lua"
+lua_cpath = "./?.so;" .. "./skynet/luaclib/?.so"
+cpath = "./skynet/cservice/?.so"
