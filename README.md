@@ -4,12 +4,13 @@ skynet snlua服务性能分析工具
 
 ## 特性
 * 易使用，接口简单
-* 轻量，对skynet源码无侵入
+* 轻量，可无缝对接lua5.4版本的skynet（lua5.3版本也只需修改少量代码适配，即可接入）
 * 直观，可生成函数间调用关系视图及热点函数性能开销占比信息
 
 ## 注意事项
 * 一个skynet进程，同一时间只能对一个服务进行性能分析采样
-* 目前只支持采样snlua结构体包含activeL字段的skynet，即仓库git commit ID: eaa60ca8及以后的版本（恰好只支持lua5.4）
+* 采样需要skynet源码snlua结构体包含activeL字段，因此其仓库git commit ID:eaa60ca8（包含）之后的版本可无缝接入
+* 针对eaa60ca8之前版本skynet的适配方案：git apply [snlua53_set_activeL.diff](https://github.com/xingshuo/skynet-perf/blob/main/snlua53_set_activeL.diff#L1)
 * 采样频率固定为50Hz，可通过PROF_HZ常量自行调整
 * 编译lperf.so时，若未指定INCLUDE_DIR，则默认使用include/下的头文件进行编译
 

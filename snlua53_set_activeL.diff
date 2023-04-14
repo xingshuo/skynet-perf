@@ -1,0 +1,48 @@
+diff --git a/3rd/lua/lcorolib.c b/3rd/lua/lcorolib.c
+index 0b17af9..a928067 100644
+--- a/3rd/lua/lcorolib.c
++++ b/3rd/lua/lcorolib.c
+@@ -17,6 +17,16 @@
+ #include "lauxlib.h"
+ #include "lualib.h"
+ 
++// Fixme: same size with 'snlua' in service_snlua.c
++struct snlua {
++	lua_State * L;
++	void * ctx;
++	size_t mem;
++	size_t mem_report;
++	size_t mem_limit;
++	lua_State * activeL;
++};
++
+ 
+ static lua_State *getco (lua_State *L) {
+   lua_State *co = lua_tothread(L, 1);
+@@ -36,7 +46,14 @@ static int auxresume (lua_State *L, lua_State *co, int narg) {
+     return -1;  /* error flag */
+   }
+   lua_xmove(L, co, narg);
++  // Fixme: set 'activeL'
++  void *ud = NULL;
++  lua_getallocf(L, &ud);
++  struct snlua *l = (struct snlua *)ud;
++  l->activeL = co;
+   status = lua_resume(co, L, narg);
++  l->activeL = L;
++
+   if (status == LUA_OK || status == LUA_YIELD) {
+     int nres = lua_gettop(co);
+     if (!lua_checkstack(L, nres + 1)) {
+diff --git a/service-src/service_snlua.c b/service-src/service_snlua.c
+index 6f2ea6c..e327050 100644
+--- a/service-src/service_snlua.c
++++ b/service-src/service_snlua.c
+@@ -17,6 +17,7 @@ struct snlua {
+ 	size_t mem;
+ 	size_t mem_report;
+ 	size_t mem_limit;
++	lua_State * activeL;
+ };
+ 
+ // LUA_CACHELIB may defined in patched lua for shared proto

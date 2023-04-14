@@ -30,7 +30,9 @@ struct snlua {
     size_t mem_report;
     size_t mem_limit;
     lua_State* activeL;
+#if LUA_VERSION_NUM >= 504
     int trap; // ATOM_INT trap
+#endif
 };
 
 static const uint8_t MAX_FUNC_NAME_SIZE = 80;
