@@ -1,5 +1,6 @@
 # skynet-perf
 skynet snlua服务性能分析工具
+* What is skynet? https://github.com/cloudwu/skynet
 
 ## 特性
 * 易使用，接口简单
@@ -8,7 +9,9 @@ skynet snlua服务性能分析工具
 
 ## 注意事项
 * 一个skynet进程，同一时间只能对一个服务进行性能分析采样
+* 目前只支持snlua结构体包含activeL字段的版本，即git commit ID: eaa60ca8及之后的版本
 * 采样频率固定为50Hz，可通过PROF_HZ常量自行调整
+* 编译lperf.so时，若未指定INCLUDE_DIR，则默认使用include/下的头文件进行编译
 
 ## 编译 && 运行示例
 * 将编译后的skynet仓库连接到工程目录下

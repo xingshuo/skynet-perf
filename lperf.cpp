@@ -37,7 +37,7 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
-    if (strncmp(name, LUA_GNAME ".", 3) == 0) {  /* name start with '_G.'? */
+    if (strncmp(name, "_G.", 3) == 0) {  /* name start with '_G.'? */
       lua_pushstring(L, name + 3);  /* push name without prefix */
       lua_remove(L, -2);  /* remove original name */
     }
