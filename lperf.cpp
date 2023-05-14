@@ -115,8 +115,8 @@ lperf_app::lperf_app(const char* prof_file) {
         m_func_name2Id[IGNORE_NAME[i]] = i;
     }
     
-    records_num = 0;
-    samples_num = 0;
+    m_records_num = 0;
+    m_samples_num = 0;
 }
 
 lperf_app::~lperf_app() {
@@ -151,7 +151,7 @@ void lperf_app::add_record(uint32_t* stack, int depth) {
     if (depth <= 0) {
         return;
     }
-    records_num++;
+    m_records_num++;
 
     uint32_t hash = 0;
     for (int i = 0; i < depth; i++) {
@@ -168,7 +168,7 @@ void lperf_app::add_record(uint32_t* stack, int depth) {
         }
         pcurr = pcurr->next;
     }
-    samples_num++;
+    m_samples_num++;
 
     pcurr = (struct sample*)malloc(sizeof(struct sample));
     pcurr->count = 1;
@@ -196,7 +196,7 @@ put_bigendian_u32(uint8_t* buf, uint32_t v) {
 }
 
 void lperf_app::save_records() {
-    if (records_num == 0) {
+    if (m_records_num == 0) {
         skynet_error(NULL, "lperf: no save records");
         return;
     }
@@ -267,7 +267,7 @@ void lperf_app::save_records() {
     }
 
     write_file((const char*)buf, total_len);
-    skynet_error(NULL, "lperf: save %d records, %d samples, %d nodes to %s", records_num, samples_num, func_num, m_filename.c_str());
+    skynet_error(NULL, "lperf: save %d records, %d samples, %d nodes to %s", m_records_num, m_samples_num, func_num, m_filename.c_str());
 }
 
 

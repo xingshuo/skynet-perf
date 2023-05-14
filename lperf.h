@@ -66,7 +66,7 @@ public:
     std::string m_filename;
     int m_fd;
     lua_State* m_gL;
-    int records_num;
-    int samples_num;
+    int m_records_num;
+    int m_samples_num;
     struct sample* m_buckets[MAX_BUCKET_SIZE];
 };
