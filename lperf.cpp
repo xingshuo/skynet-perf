@@ -267,6 +267,7 @@ void lperf_app::save_records() {
     }
 
     write_file((const char*)buf, total_len);
+    free(buf);
     skynet_error(NULL, "lperf: save %d records, %d samples, %d nodes to %s", m_records_num, m_samples_num, func_num, m_filename.c_str());
 }
 
