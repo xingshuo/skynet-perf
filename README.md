@@ -80,6 +80,7 @@ Count	:	Backtrace
 * https://github.com/esrrhs/pLua
 * https://github.com/google/pprof
 
-## 其他
+## 其他扩展库
+* https://github.com/xingshuo/skynet-ext
 * https://github.com/xingshuo/skynet-mprof
 * https://github.com/xingshuo/skynet-observer
