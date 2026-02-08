@@ -25,7 +25,7 @@ skynet snlua服务性能分析工具
 ```
 * 编译解析器pprof
 ```bash
-# go get github.com/goccy/go-graphviz
+# go get github.com/goccy/go-graphviz@v0.1.3
 # go build pprof.go
 ```
 * 运行测试用例
@@ -34,6 +34,14 @@ skynet snlua服务性能分析工具
 ```
 
 ## 分析示例采样结果
+* 生成函数调用链及调用开销占比火焰图
+```bash
+# ./pprof -i test_calc.pro -flame test_calc.flame
+# perl flamegraph.pl --title "Cpu Flame Graph" --countname "samples" test_calc.flame > test_calc_flame.svg
+```
+输出示例：
+![火焰图](test/test_calc_flame.svg)
+
 * 以文本形式查看所有热点函数（叶节点）性能开销占比（降序）
 ```bash
 # ./pprof -i test_calc.pro -text

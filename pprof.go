@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+
 	"github.com/goccy/go-graphviz"
 )
 
@@ -35,6 +36,7 @@ var (
 	png   string
 	svg   string
 	info  string
+	flame string
 )
 
 func parseFile(filename string) (*Profile, error) {
@@ -276,12 +278,31 @@ func newDot(prof *Profile) string {
 	return dot.String()
 }
 
+func showFlame(prof *Profile, outFile string) {
+	var builder strings.Builder
+	for _, sa := range prof.samples {
+		for i := 0; i < sa.depth; i++ {
+			Id := sa.stack[i]
+			if i == sa.depth-1 {
+				builder.WriteString(fmt.Sprintf("%s ", prof.funcId2Name[Id]))
+			} else {
+				builder.WriteString(fmt.Sprintf("%s;", prof.funcId2Name[Id]))
+			}
+		}
+		builder.WriteString(fmt.Sprintf("%d\n", sa.count))
+	}
+	if err := os.WriteFile(outFile, []byte(builder.String()), 0666); err != nil {
+		fmt.Println(err)
+	}
+}
+
 func main() {
 	flag.StringVar(&input, "i", "", "input file")
 	flag.BoolVar(&text, "text", false, "show text sort data")
 	flag.StringVar(&png, "png", "", "generate png file")
 	flag.StringVar(&svg, "svg", "", "generate svg file")
 	flag.StringVar(&info, "info", "", "dump profile data detail info to file")
+	flag.StringVar(&flame, "flame", "", "generate flame graph file")
 	flag.Parse()
 
 	if input == "" {
@@ -301,5 +322,8 @@ func main() {
 	}
 	if info != "" {
 		showInfo(prof, info)
+	}
+	if flame != "" {
+		showFlame(prof, flame)
 	}
 }
